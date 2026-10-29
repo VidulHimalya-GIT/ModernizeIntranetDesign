@@ -1,0 +1,2382 @@
+IIT INTRANET — COMPLETE SOURCE CODE
+================================================================================
+
+Place public/iit-logo.png and public/favicon.svg in the public folder.
+
+
+================================================================================
+FILE: src/App.tsx
+================================================================================
+
+import { useMemo, useState, type ReactNode } from "react"
+
+type IconName = "arrow" | "bell" | "book" | "calendar" | "chevron" | "clock" | "document" | "grid" | "help" | "home" | "menu" | "people" | "search" | "shield" | "star"
+type Portal = "student" | "lecturer"
+type NavItem = { label: string; icon: IconName }
+
+const icons: Record<IconName, ReactNode> = {
+  arrow: <path d="M5 12h14m-5-5 5 5-5 5" />,
+  bell: <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4" />,
+  book: (
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z" />
+  ),
+  calendar: (
+    <path d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 0 1 2 2v15H3V6a2 2 0 0 1 2-2z" />
+  ),
+  chevron: <path d="m9 18 6-6-6-6" />,
+  clock: <path d="M12 6v6l4 2M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z" />,
+  document: (
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm0 0v6h6M8 13h8m-8 4h6" />
+  ),
+  grid: <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" />,
+  help: (
+    <path d="M9.1 9a3 3 0 1 1 4.8 2.4c-1.1.8-1.9 1.3-1.9 2.6m0 4h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z" />
+  ),
+  home: <path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6" />,
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  people: (
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  ),
+  search: <path d="m21 21-4.35-4.35M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0z" />,
+  shield: (
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zm-3-10 2 2 4-4" />
+  ),
+  star: (
+    <path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8-6.2-3.2L5.8 21 7 14.2l-5-4.9 6.9-1z" />
+  ),
+}
+
+function Icon({ name, size = 20 }: { name: IconName size?: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      className="shrink-0"
+      fill="none"
+      height={size}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.8"
+      viewBox="0 0 24 24"
+      width={size}
+    >
+      {icons[name]}
+    </svg>
+  )
+}
+
+const navItems: NavItem[] = [
+  { label: "Overview", icon: "home" },
+  { label: "Schedules", icon: "calendar" },
+  { label: "Academics", icon: "book" },
+  { label: "Student services", icon: "people" },
+  { label: "Policies & forms", icon: "shield" },
+  { label: "Campus life", icon: "star" },
+  { label: "Help & support", icon: "help" },
+]
+
+const lecturerNavItems: NavItem[] = [
+  { label: "Overview", icon: "home" },
+  { label: "Teaching & modules", icon: "book" },
+  { label: "Timetable", icon: "calendar" },
+  { label: "Assessment & marking", icon: "document" },
+  { label: "Student support", icon: "people" },
+  { label: "Research", icon: "star" },
+  { label: "Staff services", icon: "grid" },
+  { label: "Policies & support", icon: "shield" },
+]
+
+const quickLinks: {
+  title: string
+  detail: string
+  icon: IconName
+  color: string
+}[] = [
+  {
+    title: "Time table",
+    detail: "View weekly classes",
+    icon: "calendar",
+    color: "red",
+  },
+  {
+    title: "Assessment schedule",
+    detail: "Deadlines and exams",
+    icon: "clock",
+    color: "gold",
+  },
+  {
+    title: "Academic calendar",
+    detail: "Key dates for 2026/27",
+    icon: "book",
+    color: "charcoal",
+  },
+  {
+    title: "LMS login details",
+    detail: "Access learning platforms",
+    icon: "grid",
+    color: "red",
+  },
+]
+
+const categories = [
+  {
+    title: "Schedules & calendars",
+    description: "Plan your academic year and stay ahead of key dates.",
+    icon: "calendar" as IconName,
+    links: [
+      "Schedules",
+      "Orientation",
+      "Temporary",
+      "Assessments",
+      "Annual Events",
+      "Academic Calendars",
+    ],
+  },
+  {
+    title: "Academic resources",
+    description:
+      "Programme documents, delivery information, and course details.",
+    icon: "book" as IconName,
+    links: [
+      "Academic Course Delivery",
+      "Program Specification",
+      "Course Details",
+      "UoW",
+      "RGU",
+    ],
+  },
+  {
+    title: "Student services",
+    description: "Support, guidance, contacts, and student relations.",
+    icon: "people" as IconName,
+    links: [
+      "Student Complaints",
+      "Facility and Support System",
+      "Important Contact Details",
+      "Students Relations Unit",
+      "Help Desk Video Series",
+    ],
+  },
+  {
+    title: "Policies & forms",
+    description: "Student policies, conduct guidance, and mitigating forms.",
+    icon: "shield" as IconName,
+    links: [
+      "Student Policies",
+      "Code of Conduct",
+      "Club Policy",
+      "IT Policy",
+      "Mitigation Forms",
+      "UoW-Late Mitigation Circumstances Form",
+      "UoW-Mitigating Circumstances Form",
+      "UoW-Self Certification Claim Form",
+      "RGU-Coursework Extension Form - Self-Certification",
+      "RGU-Deferral Request Form - Self-Certification",
+      "Foundation Mitigating Circumstances Form",
+    ],
+  },
+  {
+    title: "Campus life",
+    description: "Connect with the IIT community beyond the classroom.",
+    icon: "star" as IconName,
+    links: [
+      "Houses",
+      "Students' Union",
+      "Clubs and Societies",
+      "Participation at Conferences",
+      "Participation at Competitions",
+    ],
+  },
+  {
+    title: "Information & help",
+    description: "Useful information and answers to common questions.",
+    icon: "help" as IconName,
+    links: ["Info", "Academia FAQ", "LMS Login Details"],
+  },
+]
+
+const programmes = [
+  {
+    group: "Undergraduate",
+    items: [
+      "BSc AI & DS",
+      "BEng AI & DE",
+      "BSc CS",
+      "BEng SE",
+      "BSc BDA",
+      "BSc BIS",
+      "BA BM",
+      "BSc BC",
+      "BSc FTDA",
+    ],
+  },
+  {
+    group: "Postgraduate",
+    items: [
+      "MSc ASE",
+      "MSc CS & F",
+      "MSc IT",
+      "MSc BDA",
+      "MSc AIE",
+      "MSc BA",
+      "MA in FBM",
+      "MSc AAI",
+    ],
+  },
+  {
+    group: "Foundation programme",
+    items: [
+      "Academic Calendar",
+      "Program Specification",
+      "Important Contact Details",
+      "Time Table",
+      "Assessment Schedule",
+    ],
+  },
+]
+
+const notices = [
+  {
+    day: "24",
+    month: "SEP",
+    title: "Semester 01 registration is now open",
+    category: "Academic",
+    time: "2 hours ago",
+  },
+  {
+    day: "19",
+    month: "SEP",
+    title: "Updated assessment schedule published",
+    category: "Assessment",
+    time: "18 September",
+  },
+  {
+    day: "12",
+    month: "SEP",
+    title: "Orientation week: what you need to know",
+    category: "Student life",
+    time: "12 September",
+  },
+]
+
+const lecturerQuickLinks: {
+  title: string
+  detail: string
+  icon: IconName
+  color: string
+}[] = [
+  {
+    title: "My teaching timetable",
+    detail: "Classes, rooms and changes",
+    icon: "calendar",
+    color: "red",
+  },
+  {
+    title: "Marking dashboard",
+    detail: "12 submissions pending",
+    icon: "document",
+    color: "gold",
+  },
+  {
+    title: "Module spaces",
+    detail: "Manage content and cohorts",
+    icon: "book",
+    color: "charcoal",
+  },
+  {
+    title: "Student records",
+    detail: "Attendance and progress",
+    icon: "people",
+    color: "red",
+  },
+]
+
+const lecturerNotices = [
+  {
+    day: "24",
+    month: "SEP",
+    title: "Semester one grade submission guidance",
+    category: "Academic office",
+    time: "45 minutes ago",
+  },
+  {
+    day: "22",
+    month: "SEP",
+    title: "Updated academic integrity process",
+    category: "Quality",
+    time: "22 September",
+  },
+  {
+    day: "18",
+    month: "SEP",
+    title: "Applications open for research seed funding",
+    category: "Research",
+    time: "18 September",
+  },
+]
+
+const lecturerCategories = [
+  {
+    title: "Teaching delivery",
+    description: "Plan modules, manage classes, and access teaching materials.",
+    icon: "book" as IconName,
+    links: ["Module handbook templates", "Teaching plans", "Learning materials", "Class registers"],
+  },
+  {
+    title: "Assessment & quality",
+    description: "Set, moderate, mark, and return assessments consistently.",
+    icon: "document" as IconName,
+    links: ["Assessment briefs", "Marking rubrics", "Moderation forms", "External examiner guidance"],
+  },
+  {
+    title: "Students & advisees",
+    description: "Support student progress, wellbeing, and engagement.",
+    icon: "people" as IconName,
+    links: ["Advisee list", "Attendance monitoring", "At-risk referrals", "Reasonable adjustments"],
+  },
+  {
+    title: "Research & development",
+    description: "Find funding, ethics, publication, and development resources.",
+    icon: "star" as IconName,
+    links: ["Research ethics", "Funding opportunities", "Publication support", "Staff development"],
+  },
+  {
+    title: "Staff services",
+    description: "Everyday people, finance, room, and facilities services.",
+    icon: "grid" as IconName,
+    links: ["Leave & absence", "Expenses & claims", "Room booking", "HR self-service"],
+  },
+  {
+    title: "Policies & support",
+    description: "Academic regulations, staff policies, and technical help.",
+    icon: "shield" as IconName,
+    links: ["Academic regulations", "Staff policies", "IT service desk", "Health & safety"],
+  },
+]
+
+type SectionGroup = {
+  title: string
+  description: string
+  icon: IconName
+  links: string[]
+}
+
+type SectionPageData = {
+  eyebrow: string
+  title: string
+  description: string
+  groups: SectionGroup[]
+}
+
+const sectionPages: Record<string, SectionPageData> = {
+  Schedules: {
+    eyebrow: "PLAN YOUR YEAR",
+    title: "Schedules & calendars",
+    description:
+      "Find class timetables, assessment dates, orientation information, and key events across the academic year.",
+    groups: [
+      {
+        title: "Class schedules",
+        description: "Your day-to-day classes and temporary timetable updates.",
+        icon: "clock",
+        links: ["Time Table", "Schedules", "Temporary"],
+      },
+      {
+        title: "Assessments",
+        description: "Plan ahead for coursework deadlines and examinations.",
+        icon: "document",
+        links: ["Assessment Schedule", "Assessments"],
+      },
+      {
+        title: "Academic year",
+        description: "Important dates, semester milestones, and university events.",
+        icon: "calendar",
+        links: ["Academic Calendar", "Academic Calendars", "Orientation", "Annual Events"],
+      },
+    ],
+  },
+  Academics: {
+    eyebrow: "LEARNING & PROGRAMMES",
+    title: "Academic resources",
+    description:
+      "Explore programme information, delivery resources, course specifications, and partner university material.",
+    groups: [
+      {
+        title: "Academic information",
+        description: "Core documentation and information about your course.",
+        icon: "book",
+        links: ["Academic Course Delivery", "Program Specification", "Course Details"],
+      },
+      {
+        title: "University partners",
+        description: "Resources for IIT's partner university programmes.",
+        icon: "grid",
+        links: ["UoW", "RGU"],
+      },
+      {
+        title: "Undergraduate",
+        description: "Bachelor's degree programme resources.",
+        icon: "document",
+        links: programmes[0].items,
+      },
+      {
+        title: "Postgraduate",
+        description: "Master's degree programme resources.",
+        icon: "star",
+        links: programmes[1].items,
+      },
+      {
+        title: "Foundation programme",
+        description: "Foundation programme information and key documents.",
+        icon: "people",
+        links: programmes[2].items,
+      },
+    ],
+  },
+  "Student services": {
+    eyebrow: "HERE TO SUPPORT YOU",
+    title: "Student services",
+    description:
+      "Access student support, raise a concern, find important contacts, and get help with campus facilities.",
+    groups: [
+      {
+        title: "Student support",
+        description: "Guidance and services available throughout your studies.",
+        icon: "people",
+        links: ["Students Relations Unit", "Facility and Support System", "Important Contact Details"],
+      },
+      {
+        title: "Complaints & feedback",
+        description: "Information about raising and resolving a concern.",
+        icon: "document",
+        links: ["Student Complaints"],
+      },
+      {
+        title: "Digital help",
+        description: "Support for IIT's learning and campus systems.",
+        icon: "help",
+        links: ["Help Desk Video Series", "LMS Login Details"],
+      },
+    ],
+  },
+  "Policies & forms": {
+    eyebrow: "DOCUMENTS & GUIDANCE",
+    title: "Policies & forms",
+    description:
+      "Review student policies and download the appropriate mitigation, extension, or deferral form.",
+    groups: [
+      {
+        title: "Student policies",
+        description: "The policies and standards that guide student life at IIT.",
+        icon: "shield",
+        links: ["Student Policies", "Code of Conduct", "Club Policy", "IT Policy"],
+      },
+      {
+        title: "UoW mitigation forms",
+        description: "Mitigation and self-certification documents for UoW students.",
+        icon: "document",
+        links: [
+          "UoW-Late Mitigation Circumstances Form",
+          "UoW-Mitigating Circumstances Form",
+          "UoW-Self Certification Claim Form",
+        ],
+      },
+      {
+        title: "RGU request forms",
+        description: "Extension and deferral documents for RGU students.",
+        icon: "document",
+        links: [
+          "RGU-Coursework Extension Form - Self-Certification",
+          "RGU-Deferral Request Form - Self-Certification",
+        ],
+      },
+      {
+        title: "Other mitigation forms",
+        description: "General and foundation programme mitigation resources.",
+        icon: "document",
+        links: ["Mitigation Forms", "Foundation Mitigating Circumstances Form"],
+      },
+    ],
+  },
+  "Campus life": {
+    eyebrow: "LIFE AT IIT",
+    title: "Campus life",
+    description:
+      "Meet your community, join a society, represent IIT, and make the most of student life.",
+    groups: [
+      {
+        title: "Student community",
+        description: "Connect with students across programmes and year groups.",
+        icon: "people",
+        links: ["Houses", "Students' Union", "Clubs and Societies"],
+      },
+      {
+        title: "Opportunities",
+        description: "Represent IIT and build experience outside the classroom.",
+        icon: "star",
+        links: ["Participation at Conferences", "Participation at Competitions"],
+      },
+      {
+        title: "Club resources",
+        description: "Guidance for participating in and managing student clubs.",
+        icon: "shield",
+        links: ["Club Policy", "Code of Conduct"],
+      },
+    ],
+  },
+  "Help & support": {
+    eyebrow: "HOW CAN WE HELP?",
+    title: "Help & support",
+    description:
+      "Find quick answers, useful contacts, platform guidance, and the right team to assist you.",
+    groups: [
+      {
+        title: "Get help",
+        description: "Find the right contact for academic or student support.",
+        icon: "help",
+        links: ["Academia FAQ", "Important Contact Details", "Info"],
+      },
+      {
+        title: "Technical support",
+        description: "Guidance for IIT systems and online learning services.",
+        icon: "grid",
+        links: ["Help Desk Video Series", "LMS Login Details", "IT Policy"],
+      },
+      {
+        title: "Student relations",
+        description: "Support with student experience, feedback, and concerns.",
+        icon: "people",
+        links: ["Students Relations Unit", "Student Complaints", "Facility and Support System"],
+      },
+    ],
+  },
+}
+
+const lecturerSectionPages: Record<string, SectionPageData> = {
+  "Teaching & modules": {
+    eyebrow: "DELIVER GREAT LEARNING",
+    title: "Teaching & modules",
+    description:
+      "Plan your teaching, manage module content, and access the practical resources you need for every class.",
+    groups: [
+      {
+        title: "My modules",
+        description: "Your active modules, cohorts, and module documentation.",
+        icon: "book",
+        links: ["Module dashboard", "Module specifications", "Module handbook templates", "Learning outcomes"],
+      },
+      {
+        title: "Teaching delivery",
+        description: "Tools and templates for planning and delivering sessions.",
+        icon: "calendar",
+        links: ["Teaching plans", "Learning materials", "Class registers", "Room booking"],
+      },
+      {
+        title: "Learning platforms",
+        description: "Manage digital learning spaces and classroom technology.",
+        icon: "grid",
+        links: ["LMS module spaces", "Lecture capture", "Virtual classroom", "Digital learning guidance"],
+      },
+    ],
+  },
+  Timetable: {
+    eyebrow: "PLAN YOUR WEEK",
+    title: "Timetable & rooms",
+    description:
+      "View your teaching schedule, check room details, and keep track of timetable changes.",
+    groups: [
+      {
+        title: "Teaching schedule",
+        description: "Your current classes, labs, and supervision sessions.",
+        icon: "clock",
+        links: ["My teaching timetable", "Weekly class schedule", "Supervision calendar"],
+      },
+      {
+        title: "Rooms & changes",
+        description: "Find rooms and request or review timetable changes.",
+        icon: "calendar",
+        links: ["Room directory", "Room booking", "Timetable change requests", "Temporary room changes"],
+      },
+      {
+        title: "Academic dates",
+        description: "Key teaching, assessment, and committee dates.",
+        icon: "calendar",
+        links: ["Academic calendar", "Assessment periods", "Board dates", "Annual events"],
+      },
+    ],
+  },
+  "Assessment & marking": {
+    eyebrow: "ASSESS FAIRLY",
+    title: "Assessment & marking",
+    description:
+      "Create assessments, manage submissions, apply marking standards, and prepare results for boards.",
+    groups: [
+      {
+        title: "Assessment design",
+        description: "Build clear, inclusive assessments aligned to module outcomes.",
+        icon: "document",
+        links: ["Assessment briefs", "Marking rubrics", "Assessment design guidance", "Academic integrity"],
+      },
+      {
+        title: "Marking & feedback",
+        description: "Access submissions, marking workflows, and feedback guidance.",
+        icon: "document",
+        links: ["Marking dashboard", "Online submissions", "Feedback guidance", "Grade descriptors"],
+      },
+      {
+        title: "Quality assurance",
+        description: "Complete moderation and prepare confirmed marks.",
+        icon: "shield",
+        links: ["Moderation forms", "External examiner guidance", "Grade submission", "Assessment boards"],
+      },
+    ],
+  },
+  "Student support": {
+    eyebrow: "SUPPORT EVERY STUDENT",
+    title: "Student support",
+    description:
+      "Monitor engagement, support advisees, and connect students with the right specialist service.",
+    groups: [
+      {
+        title: "Academic advising",
+        description: "Manage meetings, notes, and actions for your advisees.",
+        icon: "people",
+        links: ["Advisee list", "Adviser meeting notes", "Student progress", "Programme contacts"],
+      },
+      {
+        title: "Engagement & wellbeing",
+        description: "Identify concerns early and make an appropriate referral.",
+        icon: "help",
+        links: ["Attendance monitoring", "At-risk referrals", "Wellbeing referrals", "Safeguarding guidance"],
+      },
+      {
+        title: "Inclusive learning",
+        description: "Understand and apply approved learning support.",
+        icon: "shield",
+        links: ["Reasonable adjustments", "Inclusive teaching guidance", "Extenuating circumstances"],
+      },
+    ],
+  },
+  Research: {
+    eyebrow: "CREATE & DISCOVER",
+    title: "Research",
+    description:
+      "Develop your research, find funding, complete ethics review, and share your work.",
+    groups: [
+      {
+        title: "Research governance",
+        description: "Policies, ethics processes, and responsible research guidance.",
+        icon: "shield",
+        links: ["Research ethics", "Ethics application", "Research data management", "Research policies"],
+      },
+      {
+        title: "Funding & projects",
+        description: "Discover opportunities and manage active research projects.",
+        icon: "star",
+        links: ["Funding opportunities", "Internal seed funding", "Project approvals", "Research partnerships"],
+      },
+      {
+        title: "Publishing & impact",
+        description: "Support for publications, profiles, and research impact.",
+        icon: "book",
+        links: ["Publication support", "Open access", "Research profiles", "Impact resources"],
+      },
+    ],
+  },
+  "Staff services": {
+    eyebrow: "YOUR WORKPLACE",
+    title: "Staff services",
+    description:
+      "Access HR, finance, professional development, facilities, and everyday staff services.",
+    groups: [
+      {
+        title: "People & development",
+        description: "Manage your employment details, leave, and development.",
+        icon: "people",
+        links: ["HR self-service", "Leave & absence", "Staff development", "Vacancies"],
+      },
+      {
+        title: "Finance & travel",
+        description: "Submit claims and access purchasing and travel guidance.",
+        icon: "document",
+        links: ["Expenses & claims", "Purchase requests", "Travel guidance", "Project finance"],
+      },
+      {
+        title: "Campus services",
+        description: "Book spaces and request practical campus support.",
+        icon: "grid",
+        links: ["Room booking", "Facilities requests", "Staff directory", "Parking & access"],
+      },
+    ],
+  },
+  "Policies & support": {
+    eyebrow: "GUIDANCE & HELP",
+    title: "Policies & support",
+    description:
+      "Find institutional policies, academic regulations, and support for systems and services.",
+    groups: [
+      {
+        title: "Academic policies",
+        description: "Regulations and processes for teaching and assessment.",
+        icon: "book",
+        links: ["Academic regulations", "Assessment regulations", "Academic integrity", "Quality handbook"],
+      },
+      {
+        title: "Staff policies",
+        description: "Current employment, conduct, and workplace guidance.",
+        icon: "shield",
+        links: ["Staff policies", "Code of conduct", "Data protection", "Health & safety"],
+      },
+      {
+        title: "Technical support",
+        description: "Get help with accounts, devices, classrooms, and systems.",
+        icon: "help",
+        links: ["IT service desk", "Account & password help", "Classroom support", "Systems status"],
+      },
+    ],
+  },
+}
+
+function SectionPage({
+  page,
+  onOpen,
+}: {
+  page: SectionPageData
+  onOpen: (resource: string) => void
+}) {
+  return (
+    <div className="section-page">
+      <section className="page-hero">
+        <div>
+          <p className="eyebrow">{page.eyebrow}</p>
+          <h1>{page.title}</h1>
+          <p>{page.description}</p>
+        </div>
+        <div className="page-hero-mark">
+          <Icon name={page.groups[0].icon} size={29} />
+        </div>
+      </section>
+
+      <div className="section-page-toolbar">
+        <p>
+          <strong>{page.groups.reduce((total, group) => total + group.links.length, 0)}</strong>{" "}
+          available resources
+        </p>
+        <button>
+          <Icon name="search" size={16} /> Find a resource
+        </button>
+      </div>
+
+      <section className="section-group-grid">
+        {page.groups.map((group) => (
+          <article className="section-group-card" key={group.title}>
+            <div className="section-group-heading">
+              <span>
+                <Icon name={group.icon} size={21} />
+              </span>
+              <div>
+                <h2>{group.title}</h2>
+                <p>{group.description}</p>
+              </div>
+            </div>
+            <ul>
+              {group.links.map((link) => (
+                <li key={link}>
+                  <button onClick={() => onOpen(link)}>
+                    <span>
+                      <Icon name="document" size={16} />
+                      {link}
+                    </span>
+                    <Icon name="chevron" size={16} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
+      </section>
+    </div>
+  )
+}
+
+function ResourceDetail({
+  title,
+  section,
+  portal,
+  onBack,
+}: {
+  title: string
+  section: string
+  portal: Portal
+  onBack: () => void
+}) {
+  const isForm = /form|claim|request|mitigat|certification/i.test(title)
+  const isSchedule = /schedule|calendar|time table|orientation|assessment/i.test(title)
+
+  return (
+    <div className="detail-page">
+      <button className="back-button" onClick={onBack}>
+        <span aria-hidden="true">←</span> Back to {section}
+      </button>
+
+      <section className="detail-hero">
+        <div className="detail-icon">
+          <Icon
+            name={isForm ? "document" : isSchedule ? "calendar" : "book"}
+            size={27}
+          />
+        </div>
+        <div>
+          <p className="eyebrow">{section.toUpperCase()}</p>
+          <h1>{title}</h1>
+          <p>
+            Find the latest information and resources for {title.toLowerCase()}.
+          </p>
+        </div>
+      </section>
+
+      <div className="detail-layout">
+        <section className="panel detail-main">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">OVERVIEW</p>
+              <h2>About this resource</h2>
+            </div>
+          </div>
+          <p>
+            This page provides {portal === "student" ? "students" : "lecturers"} with the
+            current IIT guidance and documents relating to {title.toLowerCase()}.
+            Please check this page regularly for updates.
+          </p>
+          <div className="detail-notice">
+            <Icon name="bell" size={18} />
+            <div>
+              <strong>Latest information</strong>
+              <span>Content was last reviewed for the 2026/27 academic year.</span>
+            </div>
+          </div>
+        </section>
+
+        <aside className="panel detail-actions">
+          <p className="eyebrow">QUICK ACTIONS</p>
+          <h2>{isForm ? "Available documents" : "Useful links"}</h2>
+          <button>
+            <span>
+              <Icon name={isForm ? "document" : "arrow"} size={17} />
+              {isForm ? "Open document" : "View latest information"}
+            </span>
+            <Icon name="chevron" size={16} />
+          </button>
+          <button>
+            <span>
+              <Icon name="help" size={17} />
+              Contact {portal === "student" ? "student support" : "staff support"}
+            </span>
+            <Icon name="chevron" size={16} />
+          </button>
+        </aside>
+      </div>
+    </div>
+  )
+}
+
+function LecturerOverview({ onOpen }: { onOpen: (resource: string) => void }) {
+  return (
+    <>
+      <section className="welcome">
+        <div>
+          <p className="eyebrow">LECTURER PORTAL · 2026/27</p>
+          <h1>Good morning, Dr Perera.</h1>
+          <p>Your teaching, students, and staff services in one focused workspace.</p>
+        </div>
+        <div className="date-card">
+          <div>
+            <span>Today</span>
+            <strong>24 September 2026</strong>
+          </div>
+          <Icon name="calendar" size={23} />
+        </div>
+      </section>
+
+      <section className="quick-grid" aria-label="Lecturer quick access">
+        {lecturerQuickLinks.map((item) => (
+          <button className="quick-card" key={item.title} onClick={() => onOpen(item.title)}>
+            <span className={`quick-icon ${item.color}`}>
+              <Icon name={item.icon} size={22} />
+            </span>
+            <span>
+              <strong>{item.title}</strong>
+              <small>{item.detail}</small>
+            </span>
+            <Icon name="chevron" size={18} />
+          </button>
+        ))}
+      </section>
+
+      <div className="content-grid">
+        <section className="panel notices-panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">STAFF BULLETIN</p>
+              <h2>Latest notices</h2>
+            </div>
+            <button className="text-button">
+              View all <Icon name="arrow" size={16} />
+            </button>
+          </div>
+          <div className="notice-list">
+            {lecturerNotices.map((notice) => (
+              <button className="notice" key={notice.title} onClick={() => onOpen(notice.title)}>
+                <span className="notice-date">
+                  <strong>{notice.day}</strong>
+                  <small>{notice.month}</small>
+                </span>
+                <span className="notice-copy">
+                  <span className="badge">{notice.category}</span>
+                  <strong>{notice.title}</strong>
+                  <small>{notice.time}</small>
+                </span>
+                <Icon name="chevron" size={18} />
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="panel upcoming-panel">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">YOUR DAY</p>
+              <h2>Coming up</h2>
+            </div>
+            <button className="icon-button subtle" aria-label="Open teaching calendar">
+              <Icon name="calendar" size={19} />
+            </button>
+          </div>
+          <div className="timeline">
+            <div className="timeline-item">
+              <span className="timeline-dot red" />
+              <div>
+                <small>09:00 – 10:30</small>
+                <strong>Advanced Software Engineering</strong>
+                <span>Level 4 · Room 401</span>
+              </div>
+            </div>
+            <div className="timeline-item">
+              <span className="timeline-dot gold" />
+              <div>
+                <small>11:00 – 12:00</small>
+                <strong>Advisee appointments</strong>
+                <span>Staff office · 3 students</span>
+              </div>
+            </div>
+            <div className="timeline-item">
+              <span className="timeline-dot dark" />
+              <div>
+                <small>14:00 – 15:30</small>
+                <strong>Programme committee</strong>
+                <span>Boardroom · Level 6</span>
+              </div>
+            </div>
+          </div>
+          <button className="outline-button" onClick={() => onOpen("My teaching timetable")}>
+            Open full timetable <Icon name="arrow" size={16} />
+          </button>
+        </section>
+      </div>
+
+      <section className="resources-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">LECTURER TOOLKIT</p>
+            <h2>Teaching & staff resources</h2>
+          </div>
+          <p className="section-note">Frequently used tools, organised around your work.</p>
+        </div>
+        <div className="resource-grid">
+          {lecturerCategories.map((category) => (
+            <article className="resource-card" key={category.title}>
+              <div className="resource-title">
+                <span>
+                  <Icon name={category.icon} size={21} />
+                </span>
+                <div>
+                  <h3>{category.title}</h3>
+                  <p>{category.description}</p>
+                </div>
+              </div>
+              <ul>
+                {category.links.map((link) => (
+                  <li key={link}>
+                    <button onClick={() => onOpen(link)}>
+                      {link}
+                      <Icon name="chevron" size={15} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button className="card-link">
+                Explore this area <Icon name="arrow" size={16} />
+              </button>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="lecturer-focus">
+        <div>
+          <p className="eyebrow light">THIS SEMESTER</p>
+          <h2>Keep teaching on track</h2>
+          <p>At-a-glance priorities for your active modules and advisees.</p>
+        </div>
+        <div className="focus-stats">
+          <button onClick={() => onOpen("Module dashboard")}>
+            <strong>4</strong>
+            <span>Active modules</span>
+          </button>
+          <button onClick={() => onOpen("Marking dashboard")}>
+            <strong>12</strong>
+            <span>Items to mark</span>
+          </button>
+          <button onClick={() => onOpen("Advisee list")}>
+            <strong>18</strong>
+            <span>Advisees</span>
+          </button>
+        </div>
+      </section>
+    </>
+  )
+}
+
+function LoginPage({ onLogin }: { onLogin: (portal: Portal) => void }) {
+  const [selectedPortal, setSelectedPortal] = useState<Portal>("student")
+  const [accountId, setAccountId] = useState("")
+  const [password, setPassword] = useState("")
+
+  return (
+    <main className="login-page">
+      <section className="login-intro">
+        <img src="/iit-logo.png" alt="Informatics Institute of Technology" />
+        <div>
+          <p className="eyebrow light">IIT INTRANET · 2026/27</p>
+          <h1>One place for your IIT day.</h1>
+          <p>
+            Access academic resources, schedules, services, and the tools
+            tailored to your role.
+          </p>
+        </div>
+        <p className="login-copyright">© IIT 2026 · All rights reserved</p>
+      </section>
+
+      <section className="login-panel">
+        <form
+          className="login-card"
+          onSubmit={(event) => {
+            event.preventDefault()
+            onLogin(selectedPortal)
+          }}
+        >
+          <div className="login-heading">
+            <p className="eyebrow">WELCOME BACK</p>
+            <h2>Sign in to the intranet</h2>
+            <p>First, choose the portal that matches your IIT account.</p>
+          </div>
+
+          <fieldset className="role-options">
+            <legend>Choose your account type</legend>
+            <button
+              className={selectedPortal === "student" ? "active" : ""}
+              type="button"
+              onClick={() => setSelectedPortal("student")}
+            >
+              <span className="role-icon">
+                <Icon name="book" size={22} />
+              </span>
+              <span>
+                <strong>Student</strong>
+                <small>Courses, schedules and student services</small>
+              </span>
+              <span className="role-radio" />
+            </button>
+            <button
+              className={selectedPortal === "lecturer" ? "active" : ""}
+              type="button"
+              onClick={() => setSelectedPortal("lecturer")}
+            >
+              <span className="role-icon">
+                <Icon name="people" size={22} />
+              </span>
+              <span>
+                <strong>Lecturer</strong>
+                <small>Teaching, marking and staff services</small>
+              </span>
+              <span className="role-radio" />
+            </button>
+          </fieldset>
+
+          <label className="login-field">
+            <span>{selectedPortal === "student" ? "Student ID" : "Staff email or ID"}</span>
+            <input
+              autoComplete="username"
+              onChange={(event) => setAccountId(event.target.value)}
+              placeholder={selectedPortal === "student" ? "Enter your student ID" : "Enter your staff email or ID"}
+              required
+              value={accountId}
+            />
+          </label>
+
+          <label className="login-field">
+            <span>Password</span>
+            <input
+              autoComplete="current-password"
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Enter your password"
+              required
+              type="password"
+              value={password}
+            />
+          </label>
+
+          <div className="login-meta">
+            <label>
+              <input type="checkbox" /> Keep me signed in
+            </label>
+            <button type="button">Forgot password?</button>
+          </div>
+
+          <button className="login-submit" type="submit">
+            Sign in as {selectedPortal === "student" ? "student" : "lecturer"}
+            <Icon name="arrow" size={18} />
+          </button>
+
+          <div className="login-help">
+            <Icon name="help" size={17} />
+            <span>
+              Having trouble signing in? <button type="button">Contact IT support</button>
+            </span>
+          </div>
+        </form>
+      </section>
+    </main>
+  )
+}
+
+export default function App() {
+  const [portal, setPortal] = useState<Portal | null>(null)
+  const [activeNav, setActiveNav] = useState("Overview")
+  const [selectedResource, setSelectedResource] = useState<string | null>(null)
+  const [query, setQuery] = useState("")
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const searchResults = useMemo(() => {
+    if (!query.trim()) return []
+    const allItems =
+      portal === "student"
+        ? [
+            ...categories.flatMap((category) => category.links),
+            ...programmes.flatMap((programme) => programme.items),
+          ]
+        : lecturerCategories.flatMap((category) => category.links)
+    return [...new Set(allItems)]
+      .filter((item) => item.toLowerCase().includes(query.toLowerCase()))
+      .slice(0, 7)
+  }, [portal, query])
+
+  const currentNavItems = portal === "student" ? navItems : lecturerNavItems
+  const currentSectionPages = portal === "student" ? sectionPages : lecturerSectionPages
+
+  if (!portal) {
+    return (
+      <LoginPage
+        onLogin={(selectedPortal) => {
+          setPortal(selectedPortal)
+          setActiveNav("Overview")
+          setSelectedResource(null)
+          setQuery("")
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="brand">
+          <img src="/iit-logo.png" alt="Informatics Institute of Technology" />
+        </div>
+
+        <div className="search-wrap">
+          <Icon name="search" size={19} />
+          <input
+            aria-label="Search the intranet"
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={
+              portal === "student"
+                ? "Search resources, forms, courses..."
+                : "Search teaching, students, staff services..."
+            }
+            type="search"
+            value={query}
+          />
+          {query && (
+            <div className="search-results">
+              <p>
+                {searchResults.length
+                  ? "Suggested results"
+                  : "No results found"}
+              </p>
+              {searchResults.map((result) => (
+                <button
+                  key={result}
+                  onClick={() => {
+                    setSelectedResource(result)
+                    setQuery("")
+                  }}
+                >
+                  <Icon name="document" size={17} />
+                  <span>{result}</span>
+                  <Icon name="chevron" size={15} />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="top-actions">
+          <button className="icon-button" aria-label="Notifications">
+            <Icon name="bell" size={21} />
+            <span className="notification-dot" />
+          </button>
+          <div className="user">
+            <div className="avatar">{portal === "student" ? "SA" : "AP"}</div>
+            <div>
+              <strong>{portal === "student" ? "Student Account" : "Dr A. Perera"}</strong>
+              <span>{portal === "student" ? "2026/27" : "Lecturer"}</span>
+            </div>
+          </div>
+          <button
+            className="sign-out"
+            onClick={() => {
+              setPortal(null)
+              setMobileOpen(false)
+            }}
+          >
+            Sign out
+          </button>
+          <button
+            className="mobile-menu"
+            aria-label="Open menu"
+            onClick={() => setMobileOpen((open) => !open)}
+          >
+            <Icon name="menu" size={24} />
+          </button>
+        </div>
+      </header>
+
+      <aside className={`sidebar ${mobileOpen ? "is-open" : ""}`}>
+        <nav aria-label="Main navigation">
+          <p className="nav-eyebrow">
+            {portal === "student" ? "STUDENT INTRANET" : "LECTURER INTRANET"}
+          </p>
+          {currentNavItems.map((item) => (
+            <button
+              className={activeNav === item.label ? "active" : ""}
+              key={item.label}
+              onClick={() => {
+                setActiveNav(item.label)
+                setSelectedResource(null)
+                setMobileOpen(false)
+              }}
+            >
+              <Icon name={item.icon} size={19} />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-help">
+          <div className="help-icon">
+            <Icon name="help" size={20} />
+          </div>
+          <strong>Need some help?</strong>
+          <p>
+            {portal === "student"
+              ? "Find answers or contact the student support team."
+              : "Get help with teaching systems or contact the staff support team."}
+          </p>
+          <button>
+            {portal === "student" ? "Visit help centre" : "Open staff help"}
+            <Icon name="arrow" size={16} />
+          </button>
+        </div>
+        <button
+          className="sidebar-sign-out"
+          onClick={() => {
+            setPortal(null)
+            setMobileOpen(false)
+          }}
+        >
+          Sign out and change account
+          <Icon name="arrow" size={15} />
+        </button>
+        <p className="copyright">© IIT 2026 · All rights reserved</p>
+      </aside>
+
+      <main>
+        {selectedResource ? (
+          <ResourceDetail
+            title={selectedResource}
+            section={activeNav}
+            portal={portal}
+            onBack={() => setSelectedResource(null)}
+          />
+        ) : portal === "lecturer" && activeNav === "Overview" ? (
+          <LecturerOverview onOpen={setSelectedResource} />
+        ) : activeNav === "Overview" ? (
+          <>
+        <section className="welcome">
+          <div>
+            <p className="eyebrow">STUDENT PORTAL · 2026/27</p>
+            <h1>Good morning, Sam.</h1>
+            <p>
+              Everything you need for your academic journey, all in one place.
+            </p>
+          </div>
+          <div className="date-card">
+            <div>
+              <span>Today</span>
+              <strong>24 September 2026</strong>
+            </div>
+            <Icon name="calendar" size={23} />
+          </div>
+        </section>
+
+        <section className="quick-grid" aria-label="Quick access">
+          {quickLinks.map((item) => (
+            <button
+              className="quick-card"
+              key={item.title}
+              onClick={() => setSelectedResource(item.title)}
+            >
+              <span className={`quick-icon ${item.color}`}>
+                <Icon name={item.icon} size={22} />
+              </span>
+              <span>
+                <strong>{item.title}</strong>
+                <small>{item.detail}</small>
+              </span>
+              <Icon name="chevron" size={18} />
+            </button>
+          ))}
+        </section>
+
+        <div className="content-grid">
+          <section className="panel notices-panel">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">STAY INFORMED</p>
+                <h2>Latest notices</h2>
+              </div>
+              <button className="text-button">
+                View all <Icon name="arrow" size={16} />
+              </button>
+            </div>
+            <div className="notice-list">
+              {notices.map((notice) => (
+                <button className="notice" key={notice.title}>
+                  <span className="notice-date">
+                    <strong>{notice.day}</strong>
+                    <small>{notice.month}</small>
+                  </span>
+                  <span className="notice-copy">
+                    <span className="badge">{notice.category}</span>
+                    <strong>{notice.title}</strong>
+                    <small>{notice.time}</small>
+                  </span>
+                  <Icon name="chevron" size={18} />
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel upcoming-panel">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">YOUR WEEK</p>
+                <h2>Coming up</h2>
+              </div>
+              <button className="icon-button subtle" aria-label="Open calendar">
+                <Icon name="calendar" size={19} />
+              </button>
+            </div>
+            <div className="timeline">
+              <div className="timeline-item">
+                <span className="timeline-dot red" />
+                <div>
+                  <small>10:00 – 11:30</small>
+                  <strong>Artificial Intelligence</strong>
+                  <span>Level 3 · Lab 02</span>
+                </div>
+              </div>
+              <div className="timeline-item">
+                <span className="timeline-dot gold" />
+                <div>
+                  <small>13:00 – 14:30</small>
+                  <strong>Software Engineering</strong>
+                  <span>Level 4 · Room 401</span>
+                </div>
+              </div>
+              <div className="timeline-item">
+                <span className="timeline-dot dark" />
+                <div>
+                  <small>16:00 deadline</small>
+                  <strong>Coursework submission</strong>
+                  <span>Data Structures · LMS</span>
+                </div>
+              </div>
+            </div>
+            <button className="outline-button">
+              Open full schedule <Icon name="arrow" size={16} />
+            </button>
+          </section>
+        </div>
+
+        <section className="resources-section">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">EXPLORE</p>
+              <h2>Resources & services</h2>
+            </div>
+            <p className="section-note">
+              Frequently used information, organised by category.
+            </p>
+          </div>
+          <div className="resource-grid">
+            {categories.map((category) => (
+              <article className="resource-card" key={category.title}>
+                <div className="resource-title">
+                  <span>
+                    <Icon name={category.icon} size={21} />
+                  </span>
+                  <div>
+                    <h3>{category.title}</h3>
+                    <p>{category.description}</p>
+                  </div>
+                </div>
+                <ul>
+                  {category.links.slice(0, 4).map((link) => (
+                    <li key={link}>
+                      <button onClick={() => setSelectedResource(link)}>
+                        {link}
+                        <Icon name="chevron" size={15} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+                <button className="card-link">
+                  View all {category.links.length} resources{" "}
+                  <Icon name="arrow" size={16} />
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="programmes-section">
+          <div className="programmes-intro">
+            <p className="eyebrow light">PROGRAMMES</p>
+            <h2>Find your course resources</h2>
+            <p>
+              Access programme specifications, module details, calendars, and
+              course-specific information.
+            </p>
+          </div>
+          <div className="programme-columns">
+            {programmes.map((programme) => (
+              <div key={programme.group}>
+                <h3>{programme.group}</h3>
+                <ul>
+                  {programme.items.map((item) => (
+                    <li key={item}>
+                      <button onClick={() => setSelectedResource(item)}>
+                        {item}
+                        <Icon name="chevron" size={14} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+          </>
+        ) : (
+          <SectionPage
+            page={currentSectionPages[activeNav]}
+            onOpen={setSelectedResource}
+          />
+        )}
+      </main>
+      {mobileOpen && (
+        <button
+          className="scrim"
+          aria-label="Close menu"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+
+================================================================================
+FILE: src/index.css
+================================================================================
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,600&display=swap");
+@import "tailwindcss";
+
+:root {
+  --red: #c91f2c;
+  --red-dark: #a51420;
+  --red-soft: #fff1f2;
+  --charcoal: #292b2c;
+  --ink: #24272b;
+  --muted: #70747b;
+  --line: #e7e7e4;
+  --surface: #ffffff;
+  --canvas: #f6f6f3;
+  --gold: #d3aa2f;
+  --gold-soft: #faf4df;
+  font-family: "DM Sans", sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+button, input { font: inherit; }
+button { color: inherit; }
+
+.app-shell {
+  display: grid;
+  grid-template: 76px 1fr / 248px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  z-index: 30;
+  top: 0;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 248px minmax(280px, 560px) 1fr;
+  align-items: center;
+  gap: 32px;
+  height: 76px;
+  padding: 0 32px 0 24px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(16px);
+}
+
+.brand { display: flex; align-items: center; height: 58px; }
+.brand img { display: block; width: 190px; max-height: 54px; object-fit: contain; object-position: left center; }
+
+.search-wrap { position: relative; display: flex; align-items: center; color: #86898e; }
+.search-wrap > svg { position: absolute; left: 17px; }
+.search-wrap input {
+  width: 100%; height: 44px; padding: 0 44px 0 48px;
+  border: 1px solid var(--line); border-radius: 12px; outline: none; color: var(--ink); background: #f7f7f5;
+  transition: border .2s, box-shadow .2s, background .2s;
+}
+.search-wrap input:focus { border-color: #c7c7c2; background: white; box-shadow: 0 0 0 3px rgba(201,31,44,.08); }
+.search-wrap input::placeholder { color: #92959a; }
+.search-results {
+  position: absolute; top: 51px; right: 0; left: 0; overflow: hidden; padding: 8px;
+  border: 1px solid var(--line); border-radius: 14px; background: white; box-shadow: 0 16px 50px rgba(25,25,20,.15);
+}
+.search-results p { margin: 5px 10px 7px; color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.search-results button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; text-align: left; }
+.search-results button:hover { background: var(--canvas); }
+.search-results button span { flex: 1; }
+
+.top-actions { display: flex; align-items: center; justify-content: flex-end; gap: 17px; }
+.icon-button {
+  position: relative; display: grid; place-items: center; width: 40px; height: 40px;
+  border: 1px solid var(--line); border-radius: 11px; background: white; cursor: pointer;
+}
+.icon-button:hover { background: var(--canvas); }
+.notification-dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border: 2px solid white; border-radius: 50%; background: var(--red); }
+.user { display: flex; align-items: center; gap: 10px; padding-left: 16px; border-left: 1px solid var(--line); }
+.avatar { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: white; background: var(--charcoal); font-size: 12px; font-weight: 700; }
+.user > div:last-child { display: flex; flex-direction: column; }
+.user strong { font-size: 13px; }
+.user span { margin-top: 2px; color: var(--muted); font-size: 11px; }
+.sign-out { padding: 7px 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; font-size: 10px; font-weight: 700; }
+.sign-out:hover { color: var(--red); }
+.mobile-menu { display: none; padding: 7px; border: 0; background: none; cursor: pointer; }
+
+.sidebar {
+  position: sticky; z-index: 20; top: 76px; display: flex; flex-direction: column;
+  height: calc(100vh - 76px); overflow-y: auto; padding: 28px 18px 20px; color: var(--ink); background: #dedfdf;
+}
+.nav-eyebrow { margin: 0 12px 12px; color: #777a7d; font-size: 10px; font-weight: 700; letter-spacing: .16em; }
+.sidebar nav button {
+  display: flex; align-items: center; gap: 13px; width: 100%; padding: 12px;
+  border: 0; border-radius: 9px; color: #55585b; background: transparent; cursor: pointer; font-size: 13px; font-weight: 500; text-align: left;
+}
+.sidebar nav button:hover { color: var(--ink); background: rgba(255,255,255,.5); }
+.sidebar nav button.active { color: white; background: #505356; box-shadow: 0 8px 22px rgba(40,42,44,.16); }
+.sidebar-help { margin-top: auto; padding: 18px; border: 1px solid #c8c9c9; border-radius: 13px; background: #f0f0ef; }
+.help-icon { display: grid; place-items: center; width: 35px; height: 35px; margin-bottom: 13px; border-radius: 9px; color: #242526; background: var(--gold); }
+.sidebar-help strong { font-size: 13px; }
+.sidebar-help p { margin: 7px 0 13px; color: #707376; font-size: 11px; line-height: 1.55; }
+.sidebar-help button { display: flex; align-items: center; gap: 7px; padding: 0; border: 0; color: var(--ink); background: none; font-size: 11px; font-weight: 700; cursor: pointer; }
+.sidebar-sign-out { display: none; align-items: center; justify-content: center; gap: 7px; margin-top: 14px; padding: 10px; border: 1px solid #c8c9c9; border-radius: 9px; color: var(--ink); background: rgba(255,255,255,.4); cursor: pointer; font-size: 10px; font-weight: 700; }
+.copyright { margin: 15px 3px 0; color: #858789; font-size: 9px; text-align: center; }
+
+main { min-width: 0; padding: 44px clamp(24px, 4vw, 64px) 64px; }
+.welcome { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 29px; }
+.eyebrow { margin: 0 0 8px; color: var(--red); font-size: 10px; font-weight: 700; letter-spacing: .15em; }
+.welcome h1 { margin: 0; font-family: "Newsreader", serif; font-size: clamp(34px, 4vw, 48px); line-height: 1; letter-spacing: -.025em; }
+.welcome > div > p:last-child { margin: 11px 0 0; color: var(--muted); font-size: 14px; }
+.date-card { display: flex; align-items: center; gap: 24px; min-width: 245px; padding: 15px 17px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+.date-card div { display: flex; flex: 1; flex-direction: column; }
+.date-card span { color: var(--muted); font-size: 10px; text-transform: uppercase; }
+.date-card strong { margin-top: 3px; font-size: 12px; }
+.date-card svg { color: var(--red); }
+
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; margin-bottom: 30px; }
+.quick-card {
+  display: flex; align-items: center; gap: 12px; min-width: 0; padding: 15px;
+  border: 1px solid var(--line); border-radius: 13px; background: white; cursor: pointer; text-align: left;
+  transition: transform .2s, box-shadow .2s, border .2s;
+}
+.quick-card:hover { transform: translateY(-2px); border-color: #d3d3ce; box-shadow: 0 10px 26px rgba(30,30,25,.07); }
+.quick-icon { display: grid; flex: 0 0 41px; place-items: center; height: 41px; border-radius: 10px; }
+.quick-icon.red { color: var(--red); background: var(--red-soft); }
+.quick-icon.gold { color: #987714; background: var(--gold-soft); }
+.quick-icon.charcoal { color: white; background: var(--charcoal); }
+.quick-card > span:nth-child(2) { display: flex; flex: 1; min-width: 0; flex-direction: column; }
+.quick-card strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.quick-card small { overflow: hidden; margin-top: 3px; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.quick-card > svg { color: #aaa; }
+
+.content-grid { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(285px, .85fr); gap: 20px; }
+.panel { padding: 25px; border: 1px solid var(--line); border-radius: 15px; background: white; }
+.section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; }
+.section-heading h2 { margin: 0; font-family: "Newsreader", serif; font-size: 25px; letter-spacing: -.01em; }
+.text-button, .card-link { display: flex; align-items: center; gap: 7px; padding: 0; border: 0; color: var(--red); background: none; font-size: 11px; font-weight: 700; cursor: pointer; }
+.notice-list { margin-top: 13px; }
+.notice {
+  display: flex; align-items: center; gap: 16px; width: 100%; padding: 14px 0;
+  border: 0; border-top: 1px solid var(--line); background: none; cursor: pointer; text-align: left;
+}
+.notice:first-child { border-top: 0; }
+.notice-date { display: flex; flex: 0 0 46px; height: 49px; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 9px; background: var(--canvas); }
+.notice-date strong { font-family: "Newsreader", serif; font-size: 21px; line-height: .9; }
+.notice-date small { margin-top: 4px; color: var(--red); font-size: 8px; font-weight: 700; letter-spacing: .07em; }
+.notice-copy { display: flex; flex: 1; align-items: flex-start; flex-direction: column; }
+.badge { margin-bottom: 5px; color: var(--red); font-size: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.notice-copy strong { font-size: 13px; font-weight: 600; }
+.notice-copy small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.notice > svg { color: #aaa; }
+.subtle { width: 35px; height: 35px; color: var(--red); background: var(--red-soft); border: 0; }
+.timeline { position: relative; margin-top: 24px; }
+.timeline::before { content: ""; position: absolute; top: 8px; bottom: 17px; left: 5px; width: 1px; background: var(--line); }
+.timeline-item { position: relative; display: flex; gap: 15px; padding-bottom: 21px; }
+.timeline-dot { z-index: 1; flex: 0 0 11px; height: 11px; margin-top: 5px; border: 3px solid white; border-radius: 50%; box-shadow: 0 0 0 1px currentColor; }
+.timeline-dot.red { color: var(--red); background: var(--red); }
+.timeline-dot.gold { color: var(--gold); background: var(--gold); }
+.timeline-dot.dark { color: var(--charcoal); background: var(--charcoal); }
+.timeline-item div { display: flex; flex-direction: column; }
+.timeline-item small { color: var(--red); font-size: 9px; font-weight: 700; }
+.timeline-item strong { margin-top: 3px; font-size: 12px; }
+.timeline-item span:last-child { margin-top: 3px; color: var(--muted); font-size: 10px; }
+.outline-button { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 9px; background: white; cursor: pointer; font-size: 11px; font-weight: 700; }
+.outline-button:hover { border-color: var(--red); color: var(--red); }
+
+.resources-section { margin-top: 45px; }
+.section-note { margin: 0; color: var(--muted); font-size: 12px; }
+.resource-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+.resource-card { display: flex; min-height: 310px; flex-direction: column; padding: 22px; border: 1px solid var(--line); border-radius: 14px; background: white; }
+.resource-title { display: flex; align-items: flex-start; gap: 13px; }
+.resource-title > span { display: grid; flex: 0 0 39px; place-items: center; height: 39px; border-radius: 9px; color: var(--red); background: var(--red-soft); }
+.resource-title h3 { margin: 1px 0 5px; font-family: "Newsreader", serif; font-size: 18px; }
+.resource-title p { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+.resource-card ul { margin: 18px 0; padding: 0; list-style: none; }
+.resource-card li { border-top: 1px solid var(--line); }
+.resource-card li button { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; padding: 9px 2px; border: 0; background: none; cursor: pointer; font-size: 10.5px; text-align: left; }
+.resource-card li button:hover { color: var(--red); }
+.resource-card li svg { color: #aaa; }
+.card-link { margin-top: auto; }
+
+.programmes-section { display: grid; grid-template-columns: .8fr 2.2fr; gap: 50px; margin-top: 46px; overflow: hidden; padding: 37px; border-radius: 17px; color: white; background: var(--charcoal); }
+.programmes-intro h2 { margin: 0; font-family: "Newsreader", serif; font-size: 29px; line-height: 1.1; }
+.programmes-intro > p:last-child { margin: 14px 0 0; color: #b4b5b4; font-size: 11px; line-height: 1.6; }
+.eyebrow.light { color: var(--gold); }
+.programme-columns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+.programme-columns h3 { margin: 0 0 10px; padding-bottom: 9px; border-bottom: 1px solid #4b4d4e; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.programme-columns ul { margin: 0; padding: 0; list-style: none; }
+.programme-columns button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 5px 0; border: 0; color: #bfc0bf; background: none; cursor: pointer; font-size: 9.5px; text-align: left; }
+.programme-columns button:hover { color: white; }
+
+.lecturer-focus { display: grid; grid-template-columns: .85fr 1.4fr; align-items: center; gap: 48px; margin-top: 46px; padding: 35px 37px; border-radius: 17px; color: white; background: var(--charcoal); }
+.lecturer-focus h2 { margin: 0; font-family: "Newsreader", serif; font-size: 29px; line-height: 1.1; }
+.lecturer-focus > div:first-child > p:last-child { margin: 12px 0 0; color: #b4b5b4; font-size: 11px; line-height: 1.6; }
+.focus-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.focus-stats button { display: flex; min-height: 112px; flex-direction: column; justify-content: center; padding: 18px; border: 1px solid #4b4d4e; border-radius: 12px; color: white; background: #343637; cursor: pointer; text-align: left; transition: border .2s, transform .2s; }
+.focus-stats button:hover { transform: translateY(-2px); border-color: var(--gold); }
+.focus-stats strong { font-family: "Newsreader", serif; font-size: 31px; color: var(--gold); }
+.focus-stats span { margin-top: 5px; color: #c7c8c7; font-size: 10px; }
+
+.login-page { display: grid; grid-template-columns: minmax(330px, .85fr) minmax(520px, 1.15fr); min-height: 100vh; padding: 0; background: white; }
+.login-intro { position: relative; display: flex; min-height: 100vh; flex-direction: column; justify-content: space-between; overflow: hidden; padding: 48px clamp(38px, 5vw, 78px) 38px; color: white; background: var(--charcoal); }
+.login-intro::before { content: ""; position: absolute; top: -150px; right: -170px; width: 420px; height: 420px; border: 65px solid rgba(201,31,44,.24); border-radius: 50%; }
+.login-intro::after { content: ""; position: absolute; right: -70px; bottom: 80px; width: 210px; height: 210px; border: 38px solid rgba(211,170,47,.12); border-radius: 50%; }
+.login-intro img { position: relative; z-index: 1; width: 210px; padding: 8px 12px; border-radius: 10px; background: white; }
+.login-intro > div { position: relative; z-index: 1; max-width: 480px; }
+.login-intro h1 { max-width: 440px; margin: 0; font-family: "Newsreader", serif; font-size: clamp(45px, 5vw, 70px); line-height: .98; letter-spacing: -.035em; }
+.login-intro > div > p:last-child { max-width: 440px; margin: 21px 0 0; color: #c7c8c7; font-size: 14px; line-height: 1.75; }
+.login-copyright { position: relative; z-index: 1; margin: 0; color: #8e9090; font-size: 9px; }
+.login-panel { display: grid; place-items: center; min-height: 100vh; padding: 48px clamp(30px, 6vw, 90px); background: var(--canvas); }
+.login-card { width: min(100%, 490px); padding: 38px; border: 1px solid var(--line); border-radius: 19px; background: white; box-shadow: 0 22px 65px rgba(30,30,25,.08); }
+.login-heading h2 { margin: 0; font-family: "Newsreader", serif; font-size: 34px; letter-spacing: -.02em; }
+.login-heading > p:last-child { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.role-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 28px 0 23px; padding: 0; border: 0; }
+.role-options legend { grid-column: 1 / -1; margin-bottom: 9px; font-size: 10px; font-weight: 700; }
+.role-options > button { position: relative; display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 12px; padding: 17px; border: 1px solid var(--line); border-radius: 12px; background: white; cursor: pointer; text-align: left; transition: border .2s, box-shadow .2s; }
+.role-options > button:hover { border-color: #c7c7c2; }
+.role-options > button.active { border-color: var(--red); box-shadow: 0 0 0 3px rgba(201,31,44,.07); }
+.role-icon { display: grid; place-items: center; width: 39px; height: 39px; border-radius: 10px; color: var(--red); background: var(--red-soft); }
+.role-options > button > span:nth-child(2) { display: flex; min-width: 0; flex-direction: column; }
+.role-options strong { font-size: 12px; }
+.role-options small { margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.45; }
+.role-radio { position: absolute; top: 17px; right: 17px; width: 14px; height: 14px; border: 1px solid #b6b8ba; border-radius: 50%; }
+.role-options > button.active .role-radio { border: 4px solid var(--red); }
+.login-field { display: flex; flex-direction: column; gap: 7px; margin-top: 15px; }
+.login-field > span { font-size: 10px; font-weight: 700; }
+.login-field input { width: 100%; height: 45px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; outline: none; color: var(--ink); background: #fafaf8; font-size: 12px; transition: border .2s, box-shadow .2s, background .2s; }
+.login-field input:focus { border-color: #c7c7c2; background: white; box-shadow: 0 0 0 3px rgba(201,31,44,.07); }
+.login-field input::placeholder { color: #a0a2a4; }
+.login-meta { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 16px 0 21px; }
+.login-meta label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 10px; }
+.login-meta input { accent-color: var(--red); }
+.login-meta button { padding: 0; border: 0; color: var(--red); background: transparent; cursor: pointer; font-size: 10px; font-weight: 700; }
+.login-submit { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; padding: 13px 18px; border: 0; border-radius: 10px; color: white; background: var(--red); cursor: pointer; font-size: 11px; font-weight: 700; box-shadow: 0 8px 20px rgba(165,20,32,.2); }
+.login-submit:hover { background: var(--red-dark); }
+.login-help { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 22px; color: var(--muted); font-size: 9.5px; }
+.login-help svg { color: var(--gold); }
+.login-help button { padding: 0; border: 0; color: var(--ink); background: none; cursor: pointer; font-weight: 700; }
+
+.section-page { max-width: 1180px; }
+.page-hero {
+  position: relative; display: flex; align-items: center; justify-content: space-between; gap: 40px;
+  overflow: hidden; padding: 38px 40px; border: 1px solid var(--line); border-radius: 18px; background: white;
+}
+.page-hero::after { content: ""; position: absolute; right: -70px; bottom: -100px; width: 250px; height: 250px; border: 35px solid var(--red-soft); border-radius: 50%; }
+.page-hero > div:first-child { position: relative; z-index: 1; max-width: 700px; }
+.page-hero h1 { margin: 0; font-family: "Newsreader", serif; font-size: clamp(35px, 4vw, 48px); line-height: 1; letter-spacing: -.025em; }
+.page-hero p:last-child { max-width: 680px; margin: 14px 0 0; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.page-hero-mark { position: relative; z-index: 1; display: grid; flex: 0 0 66px; place-items: center; height: 66px; border-radius: 16px; color: white; background: var(--red); box-shadow: 0 12px 28px rgba(165,20,32,.2); }
+.section-page-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin: 26px 0 14px; }
+.section-page-toolbar p { margin: 0; color: var(--muted); font-size: 12px; }
+.section-page-toolbar p strong { color: var(--ink); }
+.section-page-toolbar button { display: flex; align-items: center; gap: 8px; padding: 9px 13px; border: 1px solid var(--line); border-radius: 9px; background: white; cursor: pointer; font-size: 11px; font-weight: 600; }
+.section-group-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.section-group-card { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: white; }
+.section-group-heading { display: flex; align-items: flex-start; gap: 14px; padding: 22px 22px 18px; }
+.section-group-heading > span { display: grid; flex: 0 0 40px; place-items: center; height: 40px; border-radius: 10px; color: var(--red); background: var(--red-soft); }
+.section-group-heading h2 { margin: 1px 0 5px; font-family: "Newsreader", serif; font-size: 20px; }
+.section-group-heading p { margin: 0; color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+.section-group-card ul { margin: 0; padding: 0 22px 14px; list-style: none; }
+.section-group-card li { border-top: 1px solid var(--line); }
+.section-group-card li button { display: flex; align-items: center; justify-content: space-between; gap: 15px; width: 100%; padding: 12px 2px; border: 0; background: transparent; cursor: pointer; font-size: 11px; text-align: left; }
+.section-group-card li button:hover { color: var(--red); }
+.section-group-card li button > span { display: flex; align-items: center; gap: 10px; }
+.section-group-card li button > span svg { color: #9b9da0; }
+.section-group-card li button > svg { flex: 0 0 auto; color: #a8aaac; }
+
+.detail-page { max-width: 1040px; }
+.back-button { display: flex; align-items: center; gap: 8px; margin: 0 0 20px; padding: 0; border: 0; color: var(--muted); background: transparent; cursor: pointer; font-size: 11px; font-weight: 600; }
+.back-button:hover { color: var(--ink); }
+.back-button span { font-size: 17px; }
+.detail-hero { display: flex; align-items: center; gap: 20px; padding: 32px 35px; border: 1px solid var(--line); border-radius: 17px; background: white; }
+.detail-icon { display: grid; flex: 0 0 58px; place-items: center; height: 58px; border-radius: 14px; color: white; background: var(--red); }
+.detail-hero h1 { margin: 0; font-family: "Newsreader", serif; font-size: clamp(31px, 4vw, 43px); line-height: 1.05; }
+.detail-hero > div:last-child > p:last-child { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+.detail-layout { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(260px, .8fr); gap: 18px; margin-top: 18px; }
+.detail-main > p { margin: 22px 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.detail-notice { display: flex; align-items: flex-start; gap: 12px; padding: 15px; border-radius: 10px; color: #6e5711; background: var(--gold-soft); }
+.detail-notice > div { display: flex; flex-direction: column; }
+.detail-notice strong { font-size: 11px; }
+.detail-notice span { margin-top: 3px; font-size: 10px; }
+.detail-actions h2 { margin: 0 0 15px; font-family: "Newsreader", serif; font-size: 21px; }
+.detail-actions > button { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 13px 0; border: 0; border-top: 1px solid var(--line); background: transparent; cursor: pointer; font-size: 10.5px; text-align: left; }
+.detail-actions > button:hover { color: var(--red); }
+.detail-actions > button span { display: flex; align-items: center; gap: 9px; }
+.scrim { display: none; }
+
+@media (max-width: 1100px) {
+  .quick-grid { grid-template-columns: repeat(2, 1fr); }
+  .resource-grid { grid-template-columns: repeat(2, 1fr); }
+  .section-group-grid { grid-template-columns: 1fr; }
+  .programmes-section { grid-template-columns: 1fr; gap: 30px; }
+  .lecturer-focus { grid-template-columns: 1fr; gap: 26px; }
+}
+
+@media (max-width: 820px) {
+  .login-page { display: block; background: var(--canvas); }
+  .login-intro { min-height: auto; padding: 28px 24px 75px; }
+  .login-intro img { width: 175px; }
+  .login-intro > div { margin-top: 65px; }
+  .login-intro h1 { font-size: 45px; }
+  .login-copyright { display: none; }
+  .login-panel { min-height: auto; margin-top: -45px; padding: 0 18px 40px; }
+  .login-card { z-index: 2; padding: 30px 26px; }
+  .app-shell { display: block; }
+  .topbar { grid-template-columns: 1fr auto; height: 68px; padding: 0 18px; }
+  .brand img { width: 164px; max-height: 46px; }
+  .search-wrap { position: absolute; top: 77px; right: 18px; left: 18px; }
+  .search-wrap input { background: white; box-shadow: 0 6px 20px rgba(25,25,20,.07); }
+  .search-results { top: 49px; }
+  .user { display: none; }
+  .sign-out { display: none; }
+  .mobile-menu { display: block; }
+  .sidebar { position: fixed; top: 68px; bottom: 0; left: 0; width: 260px; height: auto; transform: translateX(-105%); transition: transform .25s; }
+  .sidebar.is-open { transform: translateX(0); }
+  .sidebar-sign-out { display: flex; }
+  main { padding: 90px 18px 45px; }
+  .content-grid { grid-template-columns: 1fr; }
+  .detail-layout { grid-template-columns: 1fr; }
+  .scrim { position: fixed; z-index: 10; inset: 68px 0 0; display: block; border: 0; background: rgba(20,20,18,.42); }
+}
+
+@media (max-width: 620px) {
+  .role-options { grid-template-columns: 1fr; }
+  .role-options > button { flex-direction: row; align-items: center; }
+  .role-radio { top: 50%; transform: translateY(-50%); }
+  .welcome { align-items: stretch; flex-direction: column; }
+  .welcome h1 { font-size: 38px; }
+  .date-card { min-width: 0; }
+  .quick-grid, .resource-grid { grid-template-columns: 1fr; }
+  .panel { padding: 20px; }
+  .section-note { display: none; }
+  .programmes-section { padding: 28px 22px; }
+  .page-hero { align-items: flex-start; padding: 29px 24px; }
+  .page-hero-mark { flex-basis: 52px; height: 52px; }
+  .detail-hero { align-items: flex-start; padding: 25px 22px; }
+  .detail-icon { flex-basis: 48px; height: 48px; }
+  .programme-columns { grid-template-columns: 1fr; gap: 25px; }
+  .lecturer-focus { padding: 28px 22px; }
+  .focus-stats { grid-template-columns: 1fr; }
+  .focus-stats button { min-height: 88px; }
+  .resource-card { min-height: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+
+
+================================================================================
+FILE: src/main.tsx
+================================================================================
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from './App'
+import './index.css'
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+)
+
+
+================================================================================
+FILE: src/vite-env.d.ts
+================================================================================
+
+/// <reference types="vite/client" />
+
+
+================================================================================
+FILE: package.json
+================================================================================
+
+{
+  "name": "figma-make-app",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "format": "oxfmt"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.0",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/vite": "^4.0.0",
+    "oxfmt": "^0.2.0",
+    "typescript": "^5.7.0",
+    "vite": "^8.0.5"
+  }
+}
+
+
+================================================================================
+FILE: vite.config.ts
+================================================================================
+
+import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+import path from 'node:path'
+
+import siteConfiguration from './.figma/make/site.json'
+
+
+// Vite config — https://vitejs.dev/config/
+export default defineConfig(({ mode }) => {
+  // .figma/make/deploy-preview passes `--mode development` for cached-preview builds.
+  const emitSourcemaps = mode === 'development'
+
+  return {
+    base: process.env.FIGMA_PUBLIC_URL ? `${process.env.FIGMA_PUBLIC_URL}/` : '/',
+    build: {
+      sourcemap: emitSourcemaps ? 'inline' : false,
+      minify: !emitSourcemaps,
+    },
+    plugins: [
+react(),
+      tailwindcss(),
+      figmaSiteConfiguration(siteConfiguration),
+      figmaErrorOverlayReplay(),
+      figmaReactRefreshBoundaryFallback(),
+      figmaMakeKitPlugin({ storiesGlob: '/src/**/*.stories.{ts,tsx,js,jsx}' }),
+    ],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
+    server: {
+      host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
+      port: parseInt(process.env.PORT || '8443'),
+      strictPort: true,
+      watch: {
+        ignored: [
+          '**/.figma/**',
+],
+      },
+    },
+    preview: {
+      host: process.env.FIGMA_DEV_SERVER_HOST || '0.0.0.0',
+      port: parseInt(process.env.PORT || '8443'),
+    },
+  }
+})
+
+type FigmaSiteConfiguration = {
+  title?: string
+  description?: string
+  language?: string
+  robots?: {
+    index?: boolean
+  }
+  icons?: {
+    icon?: string
+  }
+  openGraph?: {
+    image?: string
+  }
+  analytics?: {
+    googleAnalyticsId?: string
+  }
+  customScripts?: {
+    headStart?: string
+    headEnd?: string
+    bodyStart?: string
+    bodyEnd?: string
+  }
+  accessibility?: {
+    addBypassLinks?: boolean
+  }
+}
+
+/** Applies /.figma/make/site.json to the generated document shell. */
+function figmaSiteConfiguration(config: FigmaSiteConfiguration): Plugin {
+  function sanitizeHtmlValue(value: string | undefined): string {
+    return value?.replace(/[^a-zA-Z0-9_-]/g, '') || ''
+  }
+  function escapeHtmlText(value: string): string {
+    return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  }
+  function replaceHtmlCommentSlot(html: string, slotName: string, content: string): string {
+    return html.replace(`<!-- ${slotName} -->`, content)
+  }
+
+  const title = config.title ?? "Figma Make App"
+  const description = config.description ?? ''
+  // Imported HTML keeps its own favicon; new Makes default to the Make product icon.
+  const favicon = config.icons?.icon ?? '/favicon.svg'
+  const socialImage = config.openGraph?.image ?? ''
+  const language = sanitizeHtmlValue(config.language) || 'en'
+  const googleAnalyticsId = sanitizeHtmlValue(config.analytics?.googleAnalyticsId)
+  const headStart = config.customScripts?.headStart ?? ''
+  const headEnd = config.customScripts?.headEnd ?? ''
+  const bodyStart = config.customScripts?.bodyStart ?? ''
+  const bodyEnd = config.customScripts?.bodyEnd ?? ''
+  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nDisallow: /\n' : ''
+
+  return {
+    name: 'figma-site-configuration',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!robotsTxt || req.url?.split('?')[0] !== '/robots.txt') return next()
+
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+        res.end(robotsTxt)
+      })
+    },
+    generateBundle() {
+      if (!robotsTxt) return
+
+      this.emitFile({
+        type: 'asset',
+        fileName: 'robots.txt',
+        source: robotsTxt,
+      })
+    },
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html) {
+        let result = html
+        result = replaceHtmlCommentSlot(result, 'figma:lang', language)
+        result = replaceHtmlCommentSlot(result, 'figma:title', escapeHtmlText(title))
+        result = replaceHtmlCommentSlot(result, 'figma:head-start', headStart)
+        result = replaceHtmlCommentSlot(result, 'figma:head-end', headEnd)
+        result = replaceHtmlCommentSlot(result, 'figma:body-start', bodyStart)
+        result = replaceHtmlCommentSlot(result, 'figma:body-end', bodyEnd)
+
+        const tags: HtmlTagDescriptor[] = []
+        if (description) {
+          tags.push({ tag: 'meta', attrs: { name: 'description', content: description }, injectTo: 'head' })
+        }
+        if (config.robots?.index === false) {
+          tags.push({ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head' })
+        }
+        if (favicon) {
+          tags.push({ tag: 'link', attrs: { rel: 'icon', href: favicon }, injectTo: 'head' })
+        }
+        if (title) {
+          tags.push({ tag: 'meta', attrs: { property: 'og:title', content: title }, injectTo: 'head' })
+        }
+        if (description) {
+          tags.push({ tag: 'meta', attrs: { property: 'og:description', content: description }, injectTo: 'head' })
+        }
+        if (socialImage) {
+          tags.push(
+            { tag: 'meta', attrs: { property: 'og:image', content: socialImage }, injectTo: 'head' },
+            { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' }, injectTo: 'head' },
+            { tag: 'meta', attrs: { name: 'twitter:image', content: socialImage }, injectTo: 'head' },
+          )
+        }
+
+        if (googleAnalyticsId) {
+          tags.push(
+            {
+              tag: 'script',
+              attrs: {
+                async: true,
+                src: `https://www.googletagmanager.com/gtag/js?id=${googleAnalyticsId}`,
+              },
+              injectTo: 'head',
+            },
+            {
+              tag: 'script',
+              children: `
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', ${JSON.stringify(googleAnalyticsId)});
+`,
+              injectTo: 'head',
+            },
+          )
+        }
+
+        if (config.accessibility?.addBypassLinks) {
+          tags.push(
+            {
+              tag: 'style',
+              children: `
+  .figma-bypass-link {
+    position: fixed;
+    top: 8px;
+    left: 8px;
+    z-index: 2147483647;
+    transform: translateY(-150%);
+    border-radius: 6px;
+    background: #111827;
+    color: #fff;
+    padding: 8px 12px;
+    font: 600 14px/1.2 system-ui, sans-serif;
+    text-decoration: none;
+  }
+  .figma-bypass-link:focus {
+    transform: translateY(0);
+  }
+`,
+              injectTo: 'head',
+            },
+            {
+              tag: 'a',
+              attrs: { class: 'figma-bypass-link', href: '#root' },
+              children: 'Skip to content',
+              injectTo: 'body-prepend',
+            },
+          )
+        }
+
+        return {
+          html: result,
+          tags,
+        }
+      },
+    },
+  }
+}
+
+/**
+ * Replay the most recent build error to clients that connect after
+ * it was first broadcast. Vite buffers an error payload only while
+ * no clients are connected and clears the buffer on the first
+ * reconnect (see `bufferedMessage` in `createWebSocketServer`), so
+ * if the preview iframe reloads after Vite already delivered an
+ * error to a live socket, the new socket misses the payload and
+ * the overlay stays hidden even though the build is still broken.
+ * We intercept `ws.send` to remember the latest error and replay
+ * it on every new connection; the cache clears on a successful
+ * `update` or `full-reload` so a stale overlay can't survive a
+ * fixed build.
+ */
+function figmaErrorOverlayReplay(): Plugin {
+  return {
+    name: 'figma-error-overlay-replay',
+    apply: 'serve',
+    configureServer(server) {
+      let lastError: object | null = null
+
+      const origSend = server.ws.send.bind(server.ws) as (...args: any[]) => void
+      server.ws.send = ((...args: any[]) => {
+        const payload = args[0]
+        if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+          const type = (payload as { type?: string }).type
+          if (type === 'error') {
+            lastError = payload as object
+          } else if (type === 'update' || type === 'full-reload') {
+            lastError = null
+          }
+        }
+        return origSend(...args)
+      }) as typeof server.ws.send
+
+      server.ws.on('connection', (socket) => {
+        if (lastError !== null) {
+          socket.send(JSON.stringify(lastError))
+        }
+      })
+    },
+  }
+}
+
+/**
+ * Reload when a module that previously defined a React Refresh boundary stops
+ * defining one. This happens when an agent moves a component into a new file
+ * and replaces the old module with a re-export:
+ *
+ *   export { default } from './app/App'
+ *
+ * Vite otherwise accepts the update using the previous module's HMR boundary,
+ * but the re-export-only transform no longer registers a replacement for the
+ * mounted component family. React reports a successful refresh while leaving
+ * the old tree mounted until the page is reloaded.
+ */
+function figmaReactRefreshBoundaryFallback(): Plugin {
+  type ModuleNode = import('vite').ModuleNode
+  const hadRefreshBoundary = new Map<string, boolean>()
+  const lostRefreshBoundaries = new Set<string>()
+  let sendFullReload: (() => void) | null = null
+
+  return {
+    name: 'figma-react-refresh-boundary-fallback',
+    apply: 'serve',
+    enforce: 'post',
+    configureServer(server) {
+      sendFullReload = () => server.ws.send({ type: 'full-reload', path: '*' })
+    },
+    handleHotUpdate({ modules, server, timestamp }) {
+      if (lostRefreshBoundaries.size === 0) return
+
+      const visited = new Set<ModuleNode>()
+      const pending = [...modules]
+      while (pending.length > 0) {
+        const current = pending.pop()
+        if (!current || visited.has(current)) continue
+        visited.add(current)
+
+        const moduleId = current.id?.split('?')[0]
+        if (moduleId && lostRefreshBoundaries.has(moduleId)) {
+          const invalidated = new Set<ModuleNode>()
+          for (const updatedModule of modules) {
+            server.moduleGraph.invalidateModule(updatedModule, invalidated, timestamp, true)
+          }
+          sendFullReload?.()
+          return []
+        }
+
+        pending.push(...current.importers)
+      }
+    },
+    transform(code, id) {
+      if (!/\.[jt]sx?(?:\?|$)/.test(id) || id.includes('/node_modules/')) return null
+
+      const moduleId = id.split('?')[0] ?? id
+      const hasRefreshBoundary = code.includes('registerExportsForReactRefresh')
+      const previousHadRefreshBoundary = hadRefreshBoundary.get(moduleId)
+      hadRefreshBoundary.set(moduleId, hasRefreshBoundary)
+
+      if (hasRefreshBoundary) lostRefreshBoundaries.delete(moduleId)
+      if (previousHadRefreshBoundary && !hasRefreshBoundary) {
+        lostRefreshBoundaries.add(moduleId)
+        queueMicrotask(() => sendFullReload?.())
+      }
+
+      return null
+    },
+  }
+}
+
+/**
+ * Serves a blank render-target page at /.figma/make/kit.html that
+ * the Figma preview script drives directly. The page exposes a
+ * registry of every file matching `storiesGlob` on
+ * window.__FIGMA__.stories so the design surface can dynamically
+ * import + mount each entry into its own grid view.
+ *
+ * Dev-only: `apply: 'serve'` gates the plugin to `vite dev`. Prod
+ * builds (`vite build`) skip it entirely so the route doesn't leak
+ * into shipped bundles.
+ */
+function figmaMakeKitPlugin(options: { storiesGlob: string | string[] }): Plugin {
+  const storiesGlob = Array.isArray(options.storiesGlob) ? options.storiesGlob : [options.storiesGlob]
+  const ROUTE = '/.figma/make/kit.html'
+  const VIRTUAL_ID = 'virtual:figma-stories'
+  const RESOLVED_ID = '\0' + VIRTUAL_ID
+  const STORIES_MODULE = `export const stories = import.meta.glob(${JSON.stringify(storiesGlob)})`
+  const HTML_BOOTSTRAP = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body>
+<div id="figma-make-kit-root"></div>
+<script type="module">
+  import { stories } from 'virtual:figma-stories'
+  window.__FIGMA__ = Object.assign(window.__FIGMA__ ?? {}, { stories })
+  window.dispatchEvent(new CustomEvent('figma.ready'))
+</script>
+</body>
+</html>`
+
+  return {
+    name: 'figma-make-kit',
+    apply: 'serve',
+    resolveId(id) {
+      if (id === VIRTUAL_ID) return RESOLVED_ID
+      return null
+    },
+    load(id) {
+      if (id !== RESOLVED_ID) return null
+      return STORIES_MODULE
+    },
+    configureServer(server) {
+      server.middlewares.use(async (req, res, next) => {
+        const url = req.url || ''
+        if (url.split('?')[0] !== ROUTE) return next()
+
+        try {
+          res.setHeader('Content-Type', 'text/html')
+          res.end(await server.transformIndexHtml(url, HTML_BOOTSTRAP))
+        } catch (err) {
+          next(err as Error)
+        }
+      })
+    },
+  }
+}
+
+
+================================================================================
+FILE: tsconfig.json
+================================================================================
+
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["node"],
+    "strict": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src", "vite.config.ts"]
+}
+
+
+================================================================================
+FILE: index.html
+================================================================================
+
+<!doctype html>
+<html lang="<!-- figma:lang -->">
+  <head>
+    <!-- figma:head-start -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><!-- figma:title --></title>
+    <!-- figma:head-end -->
+  </head>
+  <body>
+    <!-- figma:body-start -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <!-- figma:body-end -->
+  </body>
+</html>
+

@@ -1,0 +1,10 @@
+{
+  "description": "This intranet platform streamlines academic resources and support for students at the Informatic Institute of Technology, enhancing access to schedules, assessments, and policies.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
