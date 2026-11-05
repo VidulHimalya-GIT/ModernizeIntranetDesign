@@ -36,7 +36,7 @@ const icons: Record<IconName, ReactNode> = {
   ),
 }
 
-function Icon({ name, size = 20 }: { name: IconName size?: number }) {
+function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   return (
     <svg
       aria-hidden="true"
